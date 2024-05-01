@@ -5,6 +5,7 @@ The module uses the Container from the physrisk package to make the request.
 """
 
 import argparse
+import json
 import logging
 import os
 
@@ -31,12 +32,9 @@ def make_request(params: dict):
     """
     try:
         requester = Container.requester
-        request_id = "get_hazard_data"
-        request_dict = {
-            "group_ids": ["osc"],
-            "items": [params],
-        }
-        return requester().get(request_id=request_id, request_dict=request_dict)
+        request_id = "get_asset_impact"
+        params["group_ids"] = ["osc"]
+        return requester().get(request_id=request_id, request_dict=params)
     except Exception as e:
         logging.error("Error in making request: %s", e)
         return None
@@ -46,25 +44,13 @@ def parse_arguments():
     """
     Parses command-line arguments for the request.
 
-    This function uses argparse to parse command-line arguments. The arguments
-    include various parameters for the request, such as the request item ID,
-    year, scenario, indicator ID, event type, longitudes, and latitudes.
-
     Returns:
         argparse.Namespace: An object that holds the parsed arguments as
         attributes.
     """
     parser = argparse.ArgumentParser(description="Make a request.")
-    parser.add_argument("--request_item_id", type=str, default="Test")
-    parser.add_argument("--year", type=int, default=2050)
-    parser.add_argument("--scenario", type=str, default="ssp585")
-    parser.add_argument("--indicator_id", type=str, default="mean_work_loss/high")
-    parser.add_argument("--event_type", type=str, default="ChronicHeat")
     parser.add_argument(
-        "--longitudes", nargs="+", type=float, default=[69.4787, 68.71, 20.1047]
-    )
-    parser.add_argument(
-        "--latitudes", nargs="+", type=float, default=[34.556, 35.9416, 39.9116]
+        "--json_file", type=str, help="Path to the JSON file with request parameters"
     )
     return parser.parse_args()
 
@@ -79,7 +65,8 @@ if __name__ == "__main__":
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
-    request_params = vars(args)
+    with open(args.json_file, "r", encoding="utf-8") as file:
+        request_params = json.load(file)
     response = make_request(request_params)
     if response is not None:
         print(response)
