@@ -1,3 +1,5 @@
+#! /usr/local/bin/python
+
 """
 This module is used to make a request to get hazard data. It includes functions
 to parse command-line arguments and make the request.
@@ -52,7 +54,11 @@ def parse_arguments():
         attributes.
     """
     parser = argparse.ArgumentParser(description="Make a request.")
-    parser.add_argument("--json", type=str, help="JSON string with request parameters")
+    # parser.add_argument("--json", type=str, help="JSON string with request parameters")
+    parser.add_argument(
+        "--json_file", type=str, help="Path to the JSON file with request parameters"
+    )
+
     return parser.parse_args()
 
 
@@ -61,7 +67,10 @@ if __name__ == "__main__":
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
-    request_params = json.loads(args.json)
+    # request_params = json.loads(args.json)
+    with open(args.json_file, "r", encoding="utf-8") as file:
+        request_params = json.load(file)
+
     response = make_request(request_params)
     if response is not None:
         print(response)
