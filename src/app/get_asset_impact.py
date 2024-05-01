@@ -9,7 +9,6 @@ import json
 import logging
 import os
 
-from dotenv import load_dotenv
 from physrisk.container import Container
 
 logging.basicConfig(level=logging.INFO)
@@ -30,9 +29,13 @@ def make_request(params: dict):
     Returns:
         dict: The response from the request, or None if an error occurred.
     """
+
     try:
         requester = Container.requester
         request_id = "get_asset_impact"
+        params = json.loads(
+            '{"assets":{"items":[{"asset_class":"IndustrialActivity","type":"Construction","location":"Asia","latitude":32.322,"longitude":65.119},{"asset_class":"IndustrialActivity","type":"Construction","location":"South America","latitude":-39.1009,"longitude":-68.5982}]},"include_asset_level":true,"include_calc_details":true,"include_measures":true,"years":[2030,2040],"scenarios":["ssp126","ssp245"]}'
+        )
         params["group_ids"] = ["osc"]
         return requester().get(request_id=request_id, request_dict=params)
     except Exception as e:
@@ -49,24 +52,16 @@ def parse_arguments():
         attributes.
     """
     parser = argparse.ArgumentParser(description="Make a request.")
-    parser.add_argument(
-        "--json_file", type=str, help="Path to the JSON file with request parameters"
-    )
+    parser.add_argument("--json", type=str, help="JSON string with request parameters")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    # Check if .env file exists before loading
-    if os.path.exists(".env"):
-        load_dotenv()
-    else:
-        logging.warning("No .env file found")
     if not os.getenv("OSC_S3_ACCESS_KEY" or not os.getenv("OSC_S3_SECRET_KEY")):
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
-    with open(args.json_file, "r", encoding="utf-8") as file:
-        request_params = json.load(file)
+    request_params = json.loads(args.json)
     response = make_request(request_params)
     if response is not None:
         print(response)
