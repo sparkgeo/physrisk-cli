@@ -11,6 +11,7 @@ import json
 import logging
 import os
 
+from convert_formats import convert_request_to_physrisk_format
 from physrisk.container import Container
 
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +71,7 @@ if __name__ == "__main__":
     # request_params = json.loads(args.json)
     with open(args.json_file, "r", encoding="utf-8") as file:
         request_params = json.load(file)
+    request_params = convert_request_to_physrisk_format(request_params)
 
     response = make_request(request_params)
     if response is not None:
