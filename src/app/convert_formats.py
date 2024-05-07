@@ -38,3 +38,57 @@ def convert_request_to_physrisk_format(json_in: dict) -> dict:
         print(f"Key error: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+def convert_response_from_physrisk_format(json_in: dict) -> dict:
+    """
+    Converts a response from PhysRisk format to GeoJSON format.
+
+    Args:
+        json_in (dict): The input JSON in PhysRisk format.
+
+    Returns:
+        dict: The converted JSON in GeoJSON format.
+
+    Raises:
+        KeyError: If a required key is missing in the input JSON.
+    """
+    try:
+        json_out = {"type": "FeatureCollection", "features": []}
+
+        for asset_impact in json_in["asset_impacts"]:
+            properties = {}
+            for impact in asset_impact["impacts"]:
+                key = impact["key"]
+                props = {
+                    "impact_distribution": {
+                        "bin_edges": impact["impact_distribution"]["bin_edges"],
+                        "probabilities": impact["impact_distribution"]["probabilities"],
+                    },
+                    "impact_exceedance": {
+                        "exceed_probabilities": impact["impact_exceedance"][
+                            "exceed_probabilities"
+                        ],
+                        "values": impact["impact_exceedance"]["values"],
+                    },
+                    "impact_mean": impact["impact_mean"],
+                    "impact_std_deviation": impact["impact_std_deviation"],
+                    "impact_type": impact["impact_type"],
+                }
+                properties.setdefault(key["hazard_type"], {}).setdefault(
+                    key["scenario_id"], {}
+                )[key["year"]] = props
+
+            json_out["features"].append(
+                {
+                    "type": "Feature",
+                    "properties": properties,
+                    "geometry": {"type": "Point", "coordinates": [1, 2]},
+                }
+            )
+
+        return json_out
+    except KeyError as e:
+        print(f"Key error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
