@@ -1,0 +1,110 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "point": {
+            "type": "object",
+            "required": [
+                "type",
+                "coordinates"
+            ],
+            "properties": {
+                "type": {
+                    "const": "Point"
+                },
+                "coordinates": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "feature": {
+            "type": "object",
+            "required": [
+                "type",
+                "properties",
+                "geometry"
+            ],
+            "properties": {
+                "type": {
+                    "const": "Feature"
+                },
+                "properties": {
+                    "type": "object",
+                    "required": [
+                        "asset_class",
+                        "type",
+                        "location"
+                    ],
+                    "properties": {
+                        "asset_class": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "location": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "geometry": {
+                    "$ref": "#/definitions/point"
+                }
+            }
+        }
+    },
+    "type": "object",
+    "required": [
+        "type",
+        "features",
+        "properties"
+    ],
+    "properties": {
+        "type": {
+            "const": "FeatureCollection"
+        },
+        "features": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/feature"
+            }
+        },
+        "properties": {
+            "type": "object",
+            "required": [
+                "include_asset_level",
+                "include_calc_details",
+                "include_measures",
+                "years",
+                "scenarios"
+            ],
+            "properties": {
+                "include_asset_level": {
+                    "type": "boolean"
+                },
+                "include_calc_details": {
+                    "type": "boolean"
+                },
+                "include_measures": {
+                    "type": "boolean"
+                },
+                "years": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "scenarios": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
