@@ -1,0 +1,326 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "asset_impacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "string"
+            },
+            "impacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "calc_details": {
+                    "type": ["null", "object"]
+                  },
+                  "hazard_type": {
+                    "type": "string",
+                    "enum": ["ChronicHeat", "AirTemperature", "ChronicWind", "CoastalInundation", "CombinedInundation", "Drought", "Fire", "Hail", "Hazard", "Inundation", "PluvialInundation", "Precipitation", "RiverineInundation", "WaterRisk", "WaterTemperature", "Wind"]
+                  },
+                  "impact_distribution": {
+                    "type": "object",
+                    "properties": {
+                      "bin_edges": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "probabilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": ["bin_edges", "probabilities"]
+                  },
+                  "impact_exceedance": {
+                    "type": "object",
+                    "properties": {
+                      "exceed_probabilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": ["exceed_probabilities", "values"]
+                  },
+                  "impact_mean": {
+                    "type": "number"
+                  },
+                  "impact_std_deviation": {
+                    "type": "number"
+                  },
+                  "impact_type": {
+                    "type": "string",
+                    "enum": ["disruption"]
+                  },
+                  "key": {
+                    "type": "object",
+                    "properties": {
+                      "hazard_type": {
+                        "type": "string",
+                        "enum": ["ChronicHeat", "AirTemperature", "ChronicWind", "CoastalInundation", "CombinedInundation", "Drought", "Fire", "Hail", "Hazard", "Inundation", "PluvialInundation", "Precipitation", "RiverineInundation", "WaterRisk", "WaterTemperature", "Wind"]
+                      },
+                      "scenario_id": {
+                        "type": "string",
+                        "enum": ["historical", "ssp126", "ssp245", "ssp585"]
+                      },
+                      "year": {
+                        "type": "string",
+                        "enum": ["None", "2030", "2040", "2050"]
+                      }
+                    },
+                    "required": ["hazard_type", "scenario_id", "year"]
+                  },
+                  "year": {
+                    "type": "string",
+                    "enum": ["None", "2030", "2040", "2050"]
+                  }
+                },
+                "required": [
+                  "calc_details",
+                  "hazard_type",
+                  "impact_distribution",
+                  "impact_exceedance",
+                  "impact_mean",
+                  "impact_std_deviation",
+                  "impact_type",
+                  "key",
+                  "year"
+                ]
+              }
+            }
+          },
+          "required": ["asset_id", "impacts"]
+        }
+      },
+      "risk_measures": {
+        "type": "object",
+        "properties": {
+          "asset_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "measures_definitions": {
+            "type": ["null", "object"]
+          },
+          "measures_for_assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "object",
+                  "properties": {
+                    "hazard_type": {
+                      "type": "string",
+                      "enum": ["ChronicHeat", "AirTemperature", "ChronicWind", "CoastalInundation", "CombinedInundation", "Drought", "Fire", "Hail", "Hazard", "Inundation", "PluvialInundation", "Precipitation", "RiverineInundation", "WaterRisk", "WaterTemperature", "Wind"]
+                    },
+                    "measure_id": {
+                      "type": "string",
+                      "enum": ["measure_set_0"]
+                    },
+                    "scenario_id": {
+                      "type": "string",
+                      "enum": ["ssp126", "ssp245", "ssp585"]
+                    },
+                    "year": {
+                      "type": "string",
+                      "enum": ["None", "2030", "2040", "2050"]
+                    }
+                  },
+                  "required": ["hazard_type", "measure_id", "scenario_id", "year"]
+                },
+                "measures_0": {
+                  "type": ["null", "array"],
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "measures_1": {
+                  "type": ["null", "array"],
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "scores": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "scenarios": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "years": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "required": ["id", "years"]
+                }
+              },
+              "required": ["key", "measures_0", "measures_1", "scores"]
+            }
+          }
+        },
+
+      "score_based_measure_set_defn": {
+        "type": "object",
+        "properties": {
+          "asset_measure_ids_for_hazard": {
+            "type": "object",
+            "properties": {
+              "AirTemperature": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "ChronicHeat": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "ChronicWind": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "CoastalInundation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "CombinedInundation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Drought": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Fire": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Hail": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Hazard": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Inundation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "PluvialInundation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Precipitation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "RiverineInundation": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "WaterRisk": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "WaterTemperature": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              },
+              "Wind": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["na"]
+                }
+              }
+            }
+          },
+          "measure_set_id": {
+            "type": "string",
+            "enum": ["measure_set_0"]
+          },
+          "score_definitions": {
+            "type": "object"
+          }
+        },
+        "required": ["asset_measure_ids_for_hazard", "measure_set_id", "score_definitions"]
+      },
+        "required": ["asset_ids", "measures_for_assets", "scenarios", "score_based_measure_set_defn"]
+      }
+    },
+    "required": ["asset_impacts", "risk_measures"]
+  }
