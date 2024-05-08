@@ -11,7 +11,10 @@ import json
 import logging
 import os
 
-from convert_formats import convert_request_to_physrisk_format
+from convert_formats import (
+    convert_request_to_physrisk_format,
+    convert_response_from_physrisk_format,
+)
 from physrisk.container import Container
 
 logging.basicConfig(level=logging.INFO)
@@ -63,6 +66,24 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def get_coord_list(request: dict):
+    """
+    Extracts the coordinates from the request parameters.
+
+    Args:
+        request_params (dict): The request parameters.
+
+    Returns:
+        list: A list of the coordinates.
+    """
+    try:
+        return [feat["geometry"]["coordinates"] for feat in request["features"]]
+    except KeyError as e:
+        print(f"Key error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY" or not os.getenv("OSC_S3_SECRET_KEY")):
         logging.error("AWS credentials not found")
@@ -71,10 +92,20 @@ if __name__ == "__main__":
     # request_params = json.loads(args.json)
     with open(args.json_file, "r", encoding="utf-8") as file:
         request_params = json.load(file)
+    # Getting the coordinates from the request
+    coord_list = get_coord_list(request_params)
+    # Convert the request to the format expected by the physrisk package
     request_params = convert_request_to_physrisk_format(request_params)
-
+    # Make the request
     response = make_request(request_params)
-    if response is not None:
-        print(response)
+    # convert string to json
+    response = json.loads(response)
+    # Convert the response to the geojson format
+    response_geojson = convert_response_from_physrisk_format(response)
+    # Adding the coordinates to the response
+    for feat in response_geojson["features"]:
+        feat["geometry"]["coordinates"] = coord_list.pop(0)
+    if response_geojson is not None:
+        print(json.dumps(response_geojson))
     else:
         logging.error("Request failed")
