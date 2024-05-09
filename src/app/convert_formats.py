@@ -102,3 +102,69 @@ def convert_response_from_physrisk_format(json_in: dict) -> dict:
         print(f"Key error: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+def convert_response_from_physrisk_format_to_flat(json_in: dict) -> dict:
+    """
+    Converts a response from PhysRisk format to a flat GeoJSON format.
+
+    Args:
+        json_in (dict): The input JSON in PhysRisk format.
+
+    Returns:
+        dict: The converted JSON in GeoJSON format.Each feature in the 'features' list
+        represents an asset. The 'properties' of each feature is a dictionary with
+        two keys: 'asset_impacts' and 'risk_measures'. 'asset_impacts' is a dictionary
+        where the keys are strings combining the year, scenario id, and hazard type,
+        'risk_measures' is a dictionary where the keys are strings combining the year,
+        scenario id, and hazard type, and the values are the corresponding scores.
+
+    Raises:
+        KeyError: If a required key is missing in the input JSON.
+    """
+    try:
+        json_out = {"type": "FeatureCollection", "features": []}
+
+        for asset_no, asset_impact in enumerate(json_in["asset_impacts"]):
+            impacts = {}
+            measures = {}
+            # Get the measures
+            for measure_scores in json_in["risk_measures"]["measures_for_assets"]:
+                measures_key = measure_scores["key"]
+                key = f"{measures_key['year']}_{measures_key['scenario_id']}_{measures_key['hazard_type']}"
+                scores = measure_scores["scores"][asset_no]
+                measures[key] = scores
+            # Get the impacts
+            for impact in asset_impact["impacts"]:
+                key = impact["key"]
+                props = {
+                    "impact_distribution": {
+                        "bin_edges": impact["impact_distribution"]["bin_edges"],
+                        "probabilities": impact["impact_distribution"]["probabilities"],
+                    },
+                    "impact_exceedance": {
+                        "exceed_probabilities": impact["impact_exceedance"][
+                            "exceed_probabilities"
+                        ],
+                        "values": impact["impact_exceedance"]["values"],
+                    },
+                    "impact_mean": impact["impact_mean"],
+                    "impact_std_deviation": impact["impact_std_deviation"],
+                    "impact_type": impact["impact_type"],
+                }
+                props_key = f"{key['year']}_{key['scenario_id']}_{key['hazard_type']}"
+                impacts[props_key] = props
+
+            json_out["features"].append(
+                {
+                    "type": "Feature",
+                    "properties": {"asset_impacts": impacts, "risk_measures": measures},
+                    "geometry": {"type": "Point", "coordinates": [1, 2]},
+                }
+            )
+
+        return json_out
+    except KeyError as e:
+        print(f"Key error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")

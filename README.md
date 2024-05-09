@@ -20,9 +20,12 @@ input.json
     "json_file": {
         "class": "File",
         "path": "request.json"
-    }
+    },
+    "flat": false
 }
 ```
+
+The `flat' keyword indicates that you want the flatter file structure returned.
 
 request.json
 

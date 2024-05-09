@@ -14,6 +14,12 @@ inputs:
       prefix: --json_file=
       separate: false
       position: 4
+  flat:
+    type: boolean?
+    inputBinding:
+      prefix: --flat
+      separate: false
+      position: 5
 outputs:
   file_out:
     type: stdout

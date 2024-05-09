@@ -14,6 +14,7 @@ import os
 from convert_formats import (
     convert_request_to_physrisk_format,
     convert_response_from_physrisk_format,
+    convert_response_from_physrisk_format_to_flat,
 )
 from physrisk.container import Container
 
@@ -59,7 +60,11 @@ def parse_arguments():
     parser.add_argument(
         "--json_file", type=str, help="Path to the JSON file with request parameters"
     )
-
+    parser.add_argument(
+        "--flat",
+        action="store_true",
+        help="Optional argument to flatten the JSON output",
+    )
     return parser.parse_args()
 
 
@@ -98,7 +103,10 @@ if __name__ == "__main__":
     # convert string to json
     response = json.loads(response)
     # Convert the response to the geojson format
-    response_geojson = convert_response_from_physrisk_format(response)
+    if args.flat:
+        response_geojson = convert_response_from_physrisk_format_to_flat(response)
+    else:
+        response_geojson = convert_response_from_physrisk_format(response)
     # Adding the coordinates to the response
     for feat in response_geojson["features"]:
         feat["geometry"]["coordinates"] = coord_list.pop(0)
