@@ -1092,8 +1092,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    1,
-                    2
+                    65.119,
+                    32.322
                 ]
             }
         },
@@ -2188,8 +2188,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    1,
-                    2
+                    -68.5982,
+                    -39.1009
                 ]
             }
         }
