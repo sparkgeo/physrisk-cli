@@ -35,9 +35,6 @@ def make_request(params: dict):
     try:
         requester = Container.requester
         request_id = "get_asset_impact"
-        params = json.loads(
-            '{"assets":{"items":[{"asset_class":"IndustrialActivity","type":"Construction","location":"Asia","latitude":32.322,"longitude":65.119},{"asset_class":"IndustrialActivity","type":"Construction","location":"South America","latitude":-39.1009,"longitude":-68.5982}]},"include_asset_level":true,"include_calc_details":true,"include_measures":true,"years":[2030,2040],"scenarios":["ssp126","ssp245"]}'
-        )
         params["group_ids"] = ["osc"]
         return requester().get(request_id=request_id, request_dict=params)
     except Exception as e:
