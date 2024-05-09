@@ -87,7 +87,7 @@ def get_coord_list(request: dict):
 
 
 if __name__ == "__main__":
-    if not os.getenv("OSC_S3_ACCESS_KEY" or not os.getenv("OSC_S3_SECRET_KEY")):
+    if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
