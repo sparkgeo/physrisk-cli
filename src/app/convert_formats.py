@@ -56,8 +56,18 @@ def convert_response_from_physrisk_format(json_in: dict) -> dict:
     try:
         json_out = {"type": "FeatureCollection", "features": []}
 
-        for asset_impact in json_in["asset_impacts"]:
-            properties = {}
+        for asset_no, asset_impact in enumerate(json_in["asset_impacts"]):
+            impacts = {}
+            measures = {}
+            # Get the measures
+            for measure_scores in json_in["risk_measures"]["measures_for_assets"]:
+                measures_key = measure_scores["key"]
+                val = measure_scores["measures_0"][asset_no]
+                scores = measure_scores["scores"][asset_no]
+                measures.setdefault(measures_key["hazard_type"], {}).setdefault(
+                    measures_key["scenario_id"], {}
+                ).setdefault(measures_key["year"], {"measures": val, "score": scores})
+            # Get the impacts
             for impact in asset_impact["impacts"]:
                 key = impact["key"]
                 props = {
@@ -75,15 +85,15 @@ def convert_response_from_physrisk_format(json_in: dict) -> dict:
                     "impact_std_deviation": impact["impact_std_deviation"],
                     "impact_type": impact["impact_type"],
                 }
-                properties.setdefault(key["hazard_type"], {}).setdefault(
+                impacts.setdefault(key["hazard_type"], {}).setdefault(
                     key["scenario_id"], {}
                 )[key["year"]] = props
 
             json_out["features"].append(
                 {
                     "type": "Feature",
-                    "properties": properties,
-                    "geometry": {"type": "Point", "coordinates": [1, 2]},
+                    "properties": {"asset_impacts": impacts, "risk_measures": measures},
+                    "geometry": {"type": "Point", "coordinates": []},
                 }
             )
 

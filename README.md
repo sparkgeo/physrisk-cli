@@ -28,34 +28,45 @@ request.json
 
 ```json
 {
-    "assets": {
-        "items": [
-            {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
                 "asset_class": "IndustrialActivity",
                 "type": "Construction",
-                "location": "Asia",
-                "latitude": 32.322,
-                "longitude": 65.119
+                "location": "Asia"
             },
-            {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [65.119, 32.322]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
                 "asset_class": "IndustrialActivity",
                 "type": "Construction",
-                "location": "South America",
-                "latitude": -39.1009,
-                "longitude": -68.5982
+                "location": "South America"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-68.5982, -39.1009]
             }
-        ]
-    },
-    "include_asset_level": true,
-    "include_calc_details": true,
-    "include_measures": true,
-    "years": [
-        2030,
-        2040
+        }
     ],
-    "scenarios": [
-        "ssp126",
-        "ssp245"    ]
+    "properties": {
+        "include_asset_level": true,
+        "include_calc_details": true,
+        "include_measures": true,
+        "years": [
+            2030,
+            2040
+        ],
+        "scenarios": [
+            "ssp126",
+            "ssp245"    ]
+    }
 }
 ```
 
