@@ -9,6 +9,7 @@ The module uses the Container from the physrisk package to make the request.
 import argparse
 import json
 import logging
+import requests
 import os
 
 from physrisk.container import Container
@@ -65,8 +66,15 @@ if __name__ == "__main__":
         exit(1)
     args = parse_arguments()
     # request_params = json.loads(args.json)
-    with open(args.json_file, "r", encoding="utf-8") as file:
-        request_params = json.load(file)
+    if 'http' in args.json_file:
+        url = args.json_file
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError(f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}")
+        request_params = json.loads(response.content)
+    else:
+        with open(args.json_file, "r", encoding="utf-8") as file:
+            request_params = json.load(file)
 
     response = make_request(request_params)
     if response is not None:

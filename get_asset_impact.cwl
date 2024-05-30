@@ -5,7 +5,7 @@ requirements:
   NetworkAccess:
     networkAccess: true
   DockerRequirement:
-    dockerImageId: physrisk-cli:0.1
+    dockerPull: public.ecr.aws/c9k5s3u3/osc-physrisk:latest
 baseCommand: get_asset_impact.py
 inputs:
   json_file:
