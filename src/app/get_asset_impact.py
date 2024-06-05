@@ -11,6 +11,7 @@ import json
 import logging
 import os
 
+import requests
 from convert_formats import (
     convert_request_to_physrisk_format,
     convert_response_from_physrisk_format,
@@ -86,14 +87,37 @@ def get_coord_list(request: dict):
         print(f"An error occurred: {e}")
 
 
+def get_catalog() -> dict:
+    return {
+        "stac_version": "1.0.0",
+        "id": "asset-vulnerability-catalog",
+        "type": "Catalog",
+        "description": "OS-C physrisk asset vulnerability catalog",
+        "links": [
+            {"rel": "self", "href": "./catalog.json"},
+            {"rel": "root", "href": "./catalog.json"},
+        ],
+    }
+
+
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
     # request_params = json.loads(args.json)
-    with open(args.json_file, "r", encoding="utf-8") as file:
-        request_params = json.load(file)
+    print(f"I am checking here {args.json_file}")
+    if "http" in args.json_file:
+        url = args.json_file
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
+            )
+        request_params = json.loads(response.content)
+    else:
+        with open(args.json_file, "r", encoding="utf-8") as file:
+            request_params = json.load(file)
     # Getting the coordinates from the request
     coord_list = get_coord_list(request_params)
     # Convert the request to the format expected by the physrisk package
@@ -111,6 +135,13 @@ if __name__ == "__main__":
     for feat in response_geojson["features"]:
         feat["geometry"]["coordinates"] = coord_list.pop(0)
     if response_geojson is not None:
+        print("##ASSET_OUTPUT_STARTS##")
         print(json.dumps(response_geojson))
+        print('##ASSET_OUTPUT_ENDS""')
     else:
         logging.error("Request failed")
+
+    os.makedirs("asset_output", exist_ok=True)
+    with open("./asset_output/catalog.json", "w") as f:
+        catalog = get_catalog()
+        json.dump(catalog, f)
