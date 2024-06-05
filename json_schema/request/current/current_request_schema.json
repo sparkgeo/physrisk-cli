@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "physrisk_request",
+    "description": "Physrisk request object",
+    "type": "object",
+    "properties": {
+        "assets": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "asset_class": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string"
+                            },
+                            "location": {
+                                "type": "string"
+                            },
+                            "latitude": {
+                                "type": "number",
+                                "minimum": -90,
+                                "maximum": 90
+                            },
+                            "longitude": {
+                                "type": "number",
+                                "minimum": -180,
+                                "maximum": 180
+                            }
+                        },
+                        "required": [
+                            "asset_class",
+                            "latitude",
+                            "longitude"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "items"
+            ]
+        },
+        "include_asset_level": {
+            "type": "boolean"
+        },
+        "include_calc_details": {
+            "type": "boolean"
+        },
+        "include_measures": {
+            "type": "boolean"
+        },
+        "years": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        },
+        "scenarios": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "ssp126",
+                    "ssp245",
+                    "ssp585"
+                ]
+            }
+        }
+    },
+    "required": [
+        "assets",
+        "include_asset_level",
+        "include_calc_details",
+        "include_measures",
+        "years",
+        "scenarios"
+    ]
+}

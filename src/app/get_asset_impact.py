@@ -11,6 +11,12 @@ import json
 import logging
 import os
 
+import requests
+from convert_formats import (
+    convert_request_to_physrisk_format,
+    convert_response_from_physrisk_format,
+    convert_response_from_physrisk_format_to_flat,
+)
 from physrisk.container import Container
 
 logging.basicConfig(level=logging.INFO)
@@ -55,8 +61,43 @@ def parse_arguments():
     parser.add_argument(
         "--json_file", type=str, help="Path to the JSON file with request parameters"
     )
-
+    parser.add_argument(
+        "--flat",
+        action="store_true",
+        help="Optional argument to flatten the JSON output",
+    )
     return parser.parse_args()
+
+
+def get_coord_list(request: dict):
+    """
+    Extracts the coordinates from the request parameters.
+
+    Args:
+        request_params (dict): The request parameters.
+
+    Returns:
+        list: A list of the coordinates.
+    """
+    try:
+        return [feat["geometry"]["coordinates"] for feat in request["features"]]
+    except KeyError as e:
+        print(f"Key error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+def get_catalog() -> dict:
+    return {
+        "stac_version": "1.0.0",
+        "id": "asset-vulnerability-catalog",
+        "type": "Catalog",
+        "description": "OS-C physrisk asset vulnerability catalog",
+        "links": [
+            {"rel": "self", "href": "./catalog.json"},
+            {"rel": "root", "href": "./catalog.json"},
+        ],
+    }
 
 
 if __name__ == "__main__":
@@ -65,11 +106,42 @@ if __name__ == "__main__":
         exit(1)
     args = parse_arguments()
     # request_params = json.loads(args.json)
-    with open(args.json_file, "r", encoding="utf-8") as file:
-        request_params = json.load(file)
-
+    print(f"I am checking here {args.json_file}")
+    if "http" in args.json_file:
+        url = args.json_file
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
+            )
+        request_params = json.loads(response.content)
+    else:
+        with open(args.json_file, "r", encoding="utf-8") as file:
+            request_params = json.load(file)
+    # Getting the coordinates from the request
+    coord_list = get_coord_list(request_params)
+    # Convert the request to the format expected by the physrisk package
+    request_params = convert_request_to_physrisk_format(request_params)
+    # Make the request
     response = make_request(request_params)
-    if response is not None:
-        print(response)
+    # convert string to json
+    response = json.loads(response)
+    # Convert the response to the geojson format
+    if args.flat:
+        response_geojson = convert_response_from_physrisk_format_to_flat(response)
+    else:
+        response_geojson = convert_response_from_physrisk_format(response)
+    # Adding the coordinates to the response
+    for feat in response_geojson["features"]:
+        feat["geometry"]["coordinates"] = coord_list.pop(0)
+    if response_geojson is not None:
+        print("##ASSET_OUTPUT_STARTS##")
+        print(json.dumps(response_geojson))
+        print('##ASSET_OUTPUT_ENDS""')
     else:
         logging.error("Request failed")
+
+    os.makedirs("asset_output", exist_ok=True)
+    with open("./asset_output/catalog.json", "w") as f:
+        catalog = get_catalog()
+        json.dump(catalog, f)

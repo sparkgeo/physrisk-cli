@@ -12,8 +12,8 @@ ADD requirements.txt /tmp/requirements.txt
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-ADD app/get_asset_impact.py /usr/bin/get_asset_impact.py
-RUN chmod +x /usr/bin/get_asset_impact.py
+ADD app/* /usr/bin/
+RUN chmod +x /usr/bin/*.py
 
 ARG OSC_S3_BUCKET=osclimatedata
 ARG OSC_S3_HAZARD_PATH=hazard/hazard.zarr
