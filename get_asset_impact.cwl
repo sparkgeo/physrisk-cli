@@ -7,36 +7,46 @@ $graph:
     requirements:
       NetworkAccess:
         networkAccess: true
+      InlineJavascriptRequirement: {}
 
     inputs:
-      json_file:
-        type: string
-        doc: the file to transform
+      geojson:
+        type: Any
+        doc: the geojson of the assets
     outputs:
       - id: asset-result
         type: Directory
         outputSource:
           - get-impact/asset-result
+      - id: actual-result
+        type: string
+        outputSource: get-impact/actual-result
     steps:
+      parse_json:
+        run: parse_json.cwl
+        in:
+          json_input: geojson
+        out: [parsed_json]
       get-impact:
         run: "#get-asset-impact"
         in:
-          json_file: json_file
+          geojson: parse_json/parsed_json
         out:
           - asset-result
+          - actual-result
   - class: CommandLineTool
     id: get-asset-impact
     requirements:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/c9k5s3u3/osc-physrisk:latest
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh_physrisk_cli:latest
     baseCommand: get_asset_impact.py
     inputs:
-        json_file:
+        geojson:
             type: string
             inputBinding:
-                prefix: --json_file=
+                prefix: --geojson=
                 separate: false
                 position: 4
     outputs:
@@ -44,3 +54,5 @@ $graph:
             type: Directory
             outputBinding:
                 glob: "./asset_output"
+        actual-result:
+          type: stdout

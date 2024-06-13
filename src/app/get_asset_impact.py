@@ -42,6 +42,8 @@ def make_request(params: dict):
         requester = Container.requester
         request_id = "get_asset_impact"
         params["group_ids"] = ["osc"]
+        print(f"Request ID: {request_id}")
+        print(f"Request params: {params}")
         return requester().get(request_id=request_id, request_dict=params)
     except Exception as e:
         logging.error("Error in making request: %s", e)
@@ -58,12 +60,11 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description="Make a request.")
     # parser.add_argument("--json", type=str, help="JSON string with request parameters")
-    parser.add_argument(
-        "--json_file", type=str, help="Path to the JSON file with request parameters"
-    )
+    parser.add_argument("--geojson", type=str, help="Geojson of the assets")
     parser.add_argument(
         "--flat",
         action="store_true",
+        default=True,
         help="Optional argument to flatten the JSON output",
     )
     return parser.parse_args()
@@ -100,24 +101,32 @@ def get_catalog() -> dict:
     }
 
 
+def load_json_file(json_file: str) -> dict:
+    logging.debug(f"Checking the args json file: {json_file}")
+    if "http" in json_file:
+        url = json_file
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"request to get the content of the input JSON {json_file} over HTTP failed : {response.text}"
+            )
+        request_params = json.loads(response.content)
+    else:
+        with open(json_file, "r", encoding="utf-8") as file:
+            request_params = json.load(file)
+
+    return request_params
+
+
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logging.error("AWS credentials not found")
         exit(1)
     args = parse_arguments()
-    # request_params = json.loads(args.json)
-    print(f"I am checking here {args.json_file}")
-    if "http" in args.json_file:
-        url = args.json_file
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
-            )
-        request_params = json.loads(response.content)
-    else:
-        with open(args.json_file, "r", encoding="utf-8") as file:
-            request_params = json.load(file)
+    print(f"args: {args}")
+    # request_params = json.loads(args.json_file)
+    request_params = json.loads(args.geojson)
+    print(f"request_params: {request_params}")
     # Getting the coordinates from the request
     coord_list = get_coord_list(request_params)
     # Convert the request to the format expected by the physrisk package
@@ -139,9 +148,13 @@ if __name__ == "__main__":
         print(json.dumps(response_geojson))
         print('##ASSET_OUTPUT_ENDS""')
     else:
+        print("REQUEST_FAILED!!!!!!!!!")
         logging.error("Request failed")
 
+    # Make a stac catalog.json file to satitsfy the process runner
     os.makedirs("asset_output", exist_ok=True)
     with open("./asset_output/catalog.json", "w") as f:
         catalog = get_catalog()
         json.dump(catalog, f)
+    with open("./asset_output/result.json", "w") as f:
+        json.dump(response_geojson, f)
