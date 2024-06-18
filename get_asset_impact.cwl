@@ -1,4 +1,9 @@
 cwlVersion: v1.2
+$namespaces:
+  s: https://schema.org/
+s:softwareVersion: 0.0.4
+schemas:
+  - http://schema.org/version/9.0/schemaorg-current-http.rdf
 $graph:
   - class: Workflow
     id: get-asset-impact-workflow
@@ -11,8 +16,8 @@ $graph:
 
     inputs:
       geojson:
-        type: Any
-        doc: the geojson of the assets
+        type: string
+        doc: the file to transform
     outputs:
       - id: asset-result
         type: Directory
@@ -23,7 +28,7 @@ $graph:
         outputSource: get-impact/actual-result
     steps:
       parse_json:
-        run: "#"
+        run: "#parse-json"
         in:
           json_input: geojson
         out: [parsed_json]
@@ -40,7 +45,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: physrisk-cli:0.1
+          dockerImageId: physrisk-cli:0.1
     baseCommand: get_asset_impact.py
     inputs:
         geojson:
@@ -55,7 +60,7 @@ $graph:
             outputBinding:
                 glob: "./asset_output"
         actual-result:
-          type: stdout
+          type: string
 
   - class: ExpressionTool
     id: parse-json
