@@ -23,7 +23,7 @@ $graph:
         outputSource: get-impact/actual-result
     steps:
       parse_json:
-        run: parse_json.cwl
+        run: "#"
         in:
           json_input: geojson
         out: [parsed_json]
@@ -40,7 +40,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh_physrisk_cli:latest
+            dockerPull: physrisk-cli:0.1
     baseCommand: get_asset_impact.py
     inputs:
         geojson:
@@ -56,3 +56,28 @@ $graph:
                 glob: "./asset_output"
         actual-result:
           type: stdout
+
+  - class: ExpressionTool
+    id: parse-json
+
+    requirements:
+      InlineJavascriptRequirement: {}
+
+    inputs:
+      json_input:
+        type: string
+        doc: "A large JSON string input from an API"
+
+    outputs:
+      parsed_json:
+        type: string
+
+    expression: >
+      ${
+        // Parse the input JSON string
+        var parsed = JSON.parse(inputs.json_input);
+        // Convert the parsed JSON object back to a JSON string
+        var jsonString = JSON.stringify(parsed);
+        // Return the JSON string
+        return { "parsed_json": jsonString };
+      }
