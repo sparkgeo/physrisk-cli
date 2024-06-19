@@ -25,7 +25,7 @@ $graph:
           - get-impact/asset-result
       - id: actual-result
         type: string
-        outputSource: get-impact/actual-result
+        outputSource: read-stdout/stdout_string
     steps:
       parse_json:
         run: "#parse-json"
@@ -39,6 +39,12 @@ $graph:
         out:
           - asset-result
           - actual-result
+      read-stdout:
+        run: "#read-stdout-as-string"
+        in:
+          stdout_file: get-impact/actual-result
+        out: [stdout_string]
+
   - class: CommandLineTool
     id: get-asset-impact
     requirements:
@@ -47,6 +53,7 @@ $graph:
         DockerRequirement:
           dockerImageId: physrisk-cli:0.1
     baseCommand: get_asset_impact.py
+    stdout: impact_stdout.txt
     inputs:
         geojson:
             type: string
@@ -60,7 +67,9 @@ $graph:
             outputBinding:
                 glob: "./asset_output"
         actual-result:
-          type: string
+          type: File
+          outputBinding:
+              glob: impact_stdout.txt
 
   - class: ExpressionTool
     id: parse-json
@@ -85,4 +94,19 @@ $graph:
         var jsonString = JSON.stringify(parsed);
         // Return the JSON string
         return { "parsed_json": jsonString };
+      }
+  - class: ExpressionTool
+    id: read-stdout-as-string
+    requirements:
+      InlineJavascriptRequirement: {}
+    inputs:
+      stdout_file:
+        type: File
+    outputs:
+      stdout_string:
+        type: string
+    expression: >
+      ${
+        // Use the runtime to read the file content
+        return { stdout_string: self[0].contents };
       }
