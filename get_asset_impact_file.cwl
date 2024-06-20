@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: get-asset-impact-workflow
+    id: get-asset-impact-workflow-file
     label: get asset impact
     doc: get asset impact
     requirements:
@@ -30,7 +30,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerImageId: physrisk-cli:0.1
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:latest
     baseCommand: get_asset_impact.py
     inputs:
         json_file:

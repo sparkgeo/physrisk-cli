@@ -120,24 +120,34 @@ if __name__ == "__main__":
             request_params = json.load(file)
     # Getting the coordinates from the request
     coord_list = get_coord_list(request_params)
+    coord_list_copy = coord_list[:]
     # Convert the request to the format expected by the physrisk package
     request_params = convert_request_to_physrisk_format(request_params)
+
     # Make the request
     response = make_request(request_params)
     # convert string to json
     response = json.loads(response)
+    os.makedirs("asset_output", exist_ok=True)
+
+    with open("./asset_output/original_results.geojson", "w") as f:
+        json.dump(response, f)
     # Convert the response to the geojson format
-    if args.flat:
-        response_geojson = convert_response_from_physrisk_format_to_flat(response)
-    else:
-        response_geojson = convert_response_from_physrisk_format(response)
+    # if args.flat:
+    response_geojson_flat = convert_response_from_physrisk_format_to_flat(response)
+    for feat in response_geojson_flat["features"]:
+        feat["geometry"]["coordinates"] = coord_list_copy.pop(0)
+    with open("./asset_output/results_flat.geojson", "w") as f:
+        json.dump(response_geojson_flat, f)
+    # else:
+    response_geojson = convert_response_from_physrisk_format(response)
     # Adding the coordinates to the response
     for feat in response_geojson["features"]:
         feat["geometry"]["coordinates"] = coord_list.pop(0)
     if response_geojson is not None:
         print("##ASSET_OUTPUT_STARTS##")
-        print(json.dumps(response_geojson))
-        print('##ASSET_OUTPUT_ENDS""')
+        # print(json.dumps(response_geojson))
+        # print('##ASSET_OUTPUT_ENDS""')
     else:
         logging.error("Request failed")
 
@@ -145,3 +155,5 @@ if __name__ == "__main__":
     with open("./asset_output/catalog.json", "w") as f:
         catalog = get_catalog()
         json.dump(catalog, f)
+    with open("./asset_output/results_nonflat.geojson", "w") as f:
+        json.dump(response_geojson, f)
