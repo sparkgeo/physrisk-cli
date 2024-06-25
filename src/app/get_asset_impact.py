@@ -60,7 +60,7 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description="Make a request.")
     # parser.add_argument("--json", type=str, help="JSON string with request parameters")
-    parser.add_argument("--geojson", type=str, help="Geojson of the assets")
+    parser.add_argument("--json_file", type=str, help="Geojson of the assets")
     parser.add_argument(
         "--flat",
         action="store_true",
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     args = parse_arguments()
     print(f"args: {args}")
     # request_params = json.loads(args.json_file)
-    request_params = json.loads(args.geojson)
+    request_params = json.loads(args.json_file)
     print(f"request_params: {request_params}")
     # Getting the coordinates from the request
     coord_list = get_coord_list(request_params)
@@ -155,6 +155,5 @@ if __name__ == "__main__":
     os.makedirs("asset_output", exist_ok=True)
     with open("./asset_output/catalog.json", "w") as f:
         catalog = get_catalog()
+        catalog["data"] = response_geojson
         json.dump(catalog, f)
-    with open("./asset_output/result.json", "w") as f:
-        json.dump(response_geojson, f)
