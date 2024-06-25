@@ -9,19 +9,19 @@ $graph:
         networkAccess: true
 
     inputs:
-      json_file:
+      json_input:
         type: string
         doc: the file to transform
     outputs:
       - id: asset-result
-        type: string
+        type: Directory
         outputSource:
           - get-impact/asset-result
     steps:
       get-impact:
         run: "#get-asset-impact"
         in:
-          json_file: json_file
+          json_input: json_input
         out:
           - asset-result
   - class: CommandLineTool
@@ -32,18 +32,15 @@ $graph:
         DockerRequirement:
             dockerPull: public.ecr.aws/z0u8g6n1/eodh:latest
     baseCommand: get_asset_impact.py
-    stdout: catalog.json
     inputs:
-        json_file:
+        json_input:
             type: string
             inputBinding:
-                prefix: --json_file=
+                prefix: --json_input=
                 separate: false
                 position: 4
     outputs:
         asset-result:
-            type: string
+            type: Directory
             outputBinding:
-                glob: catalog.json
-                loadContents: true
-                outputEval: $(self[0].contents)
+                glob: "./asset_output"
