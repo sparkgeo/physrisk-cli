@@ -9,7 +9,7 @@ $graph:
         networkAccess: true
 
     inputs:
-      json_input:
+      json_string:
         type: string
         doc: the file to transform
     outputs:
@@ -21,7 +21,7 @@ $graph:
       get-impact:
         run: "#get-asset-impact"
         in:
-          json_input: json_input
+          json_string: json_string
         out:
           - asset-result
   - class: CommandLineTool
@@ -33,10 +33,10 @@ $graph:
             dockerPull: public.ecr.aws/z0u8g6n1/eodh:latest
     baseCommand: get_asset_impact.py
     inputs:
-        json_input:
+        json_string:
             type: string
             inputBinding:
-                prefix: --json_input=
+                prefix: --json_string=
                 separate: false
                 position: 4
     outputs:
