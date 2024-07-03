@@ -1,3 +1,6 @@
+from physrisk_cli_logger import logger
+
+
 def convert_request_to_physrisk_format(json_in: dict) -> dict:
     """
     Converts a GeoJSON object to the new format.
@@ -12,6 +15,7 @@ def convert_request_to_physrisk_format(json_in: dict) -> dict:
         KeyError: If a required key is missing in the input object.
         Exception: If any other error occurs.
     """
+    logger.info("Converting request to PhysRisk format")
     try:
         items = [
             {
@@ -34,28 +38,39 @@ def convert_request_to_physrisk_format(json_in: dict) -> dict:
         }
 
         return json_out
-    except KeyError as e:
-        print(f"Key error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    except KeyError:
+        logger.exception("Key error while converting request to PhysRisk format")
+    except Exception:
+        logger.exception(
+            "An error occurred while converting request to PhysRisk format"
+        )
 
 
-def convert_response_from_physrisk_format(json_in: dict) -> dict:
+def convert_response_from_physrisk_format(
+    json_in: dict, original_geojson: dict
+) -> dict:
     """
-    Converts a response from PhysRisk format to GeoJSON format.
+    This function takes a JSON input containing asset impacts and risk measures
+    from the PhysRisk format and integrates this data into a provided GeoJSON structure.
+    Each asset's impacts and risk measures are added to the corresponding feature in
+    the GeoJSON. The 'properties' key of the original GeoJSON is removed in the process.
 
-    Args:
-        json_in (dict): The input JSON in PhysRisk format.
+    Parameters:
+    - json_in (dict): The input JSON in PhysRisk format, containing 'asset_impacts'
+    and 'risk_measures'.
+    - original_geojson (dict): The original GeoJSON structure to which the converted
+    data will be added.
 
     Returns:
-        dict: The converted JSON in GeoJSON format.
+    - dict: The modified GeoJSON structure with added asset impacts and risk measures
+    for each feature.
 
     Raises:
-        KeyError: If a required key is missing in the input JSON.
+    - KeyError: If a required key is missing in the input JSON.
+    - Exception: For any other errors that occur during the conversion process.
     """
+    logger.info("Converting response from PhysRisk format")
     try:
-        json_out = {"type": "FeatureCollection", "features": []}
-
         for asset_no, asset_impact in enumerate(json_in["asset_impacts"]):
             impacts = {}
             measures = {}
@@ -89,19 +104,15 @@ def convert_response_from_physrisk_format(json_in: dict) -> dict:
                     key["scenario_id"], {}
                 )[key["year"]] = props
 
-            json_out["features"].append(
-                {
-                    "type": "Feature",
-                    "properties": {"asset_impacts": impacts, "risk_measures": measures},
-                    "geometry": {"type": "Point", "coordinates": []},
-                }
-            )
-
-        return json_out
-    except KeyError as e:
-        print(f"Key error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+            original_geojson["features"][asset_no]["asset_impacts"] = impacts
+            original_geojson["features"][asset_no]["risk_measures"] = measures
+        return original_geojson
+    except KeyError:
+        logger.exception("Key error while converting response from PhysRisk format")
+    except Exception:
+        logger.exception(
+            "An error occurred while converting response from PhysRisk format"
+        )
 
 
 def convert_response_from_physrisk_format_to_flat(json_in: dict) -> dict:
@@ -122,6 +133,7 @@ def convert_response_from_physrisk_format_to_flat(json_in: dict) -> dict:
     Raises:
         KeyError: If a required key is missing in the input JSON.
     """
+    logger.info("Converting response from PhysRisk format to flat")
     try:
         json_out = {"type": "FeatureCollection", "features": []}
 
@@ -164,7 +176,11 @@ def convert_response_from_physrisk_format_to_flat(json_in: dict) -> dict:
             )
 
         return json_out
-    except KeyError as e:
-        print(f"Key error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    except KeyError:
+        logger.exception(
+            "Key error while converting response from PhysRisk format to flat"
+        )
+    except Exception:
+        logger.exception(
+            "An error occurred while converting response from PhysRisk format to flat"
+        )

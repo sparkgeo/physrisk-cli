@@ -8,18 +8,15 @@ The module uses the Container from the physrisk package to make the request.
 
 import argparse
 import json
-import logging
 import os
+import sys
 
-import requests
 from convert_formats import (
     convert_request_to_physrisk_format,
     convert_response_from_physrisk_format,
-    convert_response_from_physrisk_format_to_flat,
 )
 from physrisk.container import Container
-
-logging.basicConfig(level=logging.INFO)
+from physrisk_cli_logger import logger
 
 
 def make_request(params: dict):
@@ -37,16 +34,16 @@ def make_request(params: dict):
     Returns:
         dict: The response from the request, or None if an error occurred.
     """
-
+    logger.info("Making request to get asset impact")
     try:
         requester = Container.requester
         request_id = "get_asset_impact"
         params["group_ids"] = ["osc"]
-        print(f"Request ID: {request_id}")
-        print(f"Request params: {params}")
+        logger.debug("Request ID: %s", request_id)
+        logger.debug("Request params: %s", params)
         return requester().get(request_id=request_id, request_dict=params)
-    except Exception as e:
-        logging.error("Error in making request: %s", e)
+    except Exception:
+        logger.exception("Error in making request")
         return None
 
 
@@ -58,6 +55,7 @@ def parse_arguments():
         argparse.Namespace: An object that holds the parsed arguments as
         attributes.
     """
+    logger.info("Parsing command-line arguments")
     parser = argparse.ArgumentParser(description="Make a request.")
     # parser.add_argument("--json", type=str, help="JSON string with request parameters")
     parser.add_argument("--json_string", type=str, help="Geojson of the assets")
@@ -70,25 +68,17 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def get_coord_list(request: dict):
+def get_catalog() -> dict:
     """
-    Extracts the coordinates from the request parameters.
+    Creates and returns a basic STAC catalog dictionary.
 
-    Args:
-        request_params (dict): The request parameters.
+    This function generates a dictionary representing a SpatioTemporal Asset Catalog
+    (STAC) catalog with predefined properties.
 
     Returns:
-        list: A list of the coordinates.
+    - dict: A dictionary representing the STAC catalog with predefined properties.
     """
-    try:
-        return [feat["geometry"]["coordinates"] for feat in request["features"]]
-    except KeyError as e:
-        print(f"Key error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-
-def get_catalog() -> dict:
+    logger.info("Creating STAC catalog")
     return {
         "stac_version": "1.0.0",
         "id": "asset-vulnerability-catalog",
@@ -101,59 +91,91 @@ def get_catalog() -> dict:
     }
 
 
-def load_json_file(json_file: str) -> dict:
-    logging.debug(f"Checking the args json file: {json_file}")
-    if "http" in json_file:
-        url = json_file
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"request to get the content of the input JSON {json_file} over HTTP failed : {response.text}"
-            )
-        request_params = json.loads(response.content)
-    else:
-        with open(json_file, "r", encoding="utf-8") as file:
-            request_params = json.load(file)
+def split_into_batches(lst, batch_size):
+    """
+    Splits a list into smaller lists (batches) of a specified size.
 
-    return request_params
+    Parameters:
+    - lst (list): The list to be split into batches.
+    - batch_size (int): The size of each batch.
+
+    Yields:
+    - list: A batch of the original list, with length up to `batch_size`.
+    """
+    for i in range(0, len(lst), batch_size):
+        yield lst[i : i + batch_size]
+
+
+def prepare_batches(feature_batches, original_geojson):
+    """
+    This function takes a list of feature batches and the original GeoJSON, and
+    for each batch, it creates a new GeoJSON object that retains the original
+    structure but contains only the features from the current batch.
+
+    Parameters:
+    - batches (list of list): A list of batches, where each batch is a list of
+    GeoJSON features.
+    - original_geojson (dict): The original GeoJSON object.
+
+    Returns:
+    - list of dict: A list of new GeoJSON objects, each containing a batch of features.
+    """
+    batched_geojsons = []
+    for feature_batch in feature_batches:
+        new_geojson = original_geojson.copy()  # Copy the original GeoJSON structure
+        new_geojson["features"] = feature_batch  # Replace features with the batch
+        batched_geojsons.append(new_geojson)
+    return batched_geojsons
+
+
+def batch_up(geojson_request, batch_size):
+    """
+    This function is a high-level utility that combines splitting the GeoJSON features
+    into batches and then preparing new GeoJSON objects for each batch.
+    It is intended to be used when the features of a GeoJSON need to be processed in
+    smaller groups while retaining the original GeoJSON structure.
+
+    Parameters:
+    - geojson_request (dict): The GeoJSON object to be batched.
+    - batch_size (int): The size of each batch.
+
+    Returns:
+    - list of dict: A list of new GeoJSON objects, each containing a batch of features.
+    """
+    logger.info("Batching up the GeoJSON request")
+    batched_features = list(split_into_batches(geojson_request["features"], batch_size))
+    batched_geojsons = prepare_batches(batched_features, geojson_request)
+    return batched_geojsons
 
 
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
-        logging.error("AWS credentials not found")
-        exit(1)
+        logger.error("AWS credentials not found")
+        sys.exit(1)
+
+    # Getting the json string
     args = parse_arguments()
-    print(f"args: {args}")
-    # request_params = json.loads(args.json_file)
     request_params = json.loads(args.json_string)
-    print(f"request_params: {request_params}")
-    # Getting the coordinates from the request
-    coord_list = get_coord_list(request_params)
-    # Convert the request to the format expected by the physrisk package
-    request_params = convert_request_to_physrisk_format(request_params)
-    # Make the request
-    response = make_request(request_params)
-    # convert string to json
-    response = json.loads(response)
-    # Convert the response to the geojson format
-    if args.flat:
-        response_geojson = convert_response_from_physrisk_format_to_flat(response)
-    else:
-        response_geojson = convert_response_from_physrisk_format(response)
-    # Adding the coordinates to the response
-    for feat in response_geojson["features"]:
-        feat["geometry"]["coordinates"] = coord_list.pop(0)
-    if response_geojson is not None:
-        print("##ASSET_OUTPUT_STARTS##")
-        print(json.dumps(response_geojson))
-        print('##ASSET_OUTPUT_ENDS""')
-    else:
-        print("REQUEST_FAILED!!!!!!!!!")
-        logging.error("Request failed")
+
+    # Split the request into batches of 80 of features each
+    batches = batch_up(request_params, 80)
+
+    response_geojson = {
+        "type": "FeatureCollection",
+        "features": [],
+        "properties": request_params["properties"],
+    }
+    for batch_no, batch in enumerate(batches):
+        logger.info(f"Processing batch {batch_no} of {len(batch['features'])}")
+        request_pr_format = convert_request_to_physrisk_format(batch)
+        response = make_request(request_pr_format)
+        response_json = json.loads(response)
+        updated_geosjon = convert_response_from_physrisk_format(response_json, batch)
+        response_geojson["features"].extend(updated_geosjon["features"])
 
     # Make a stac catalog.json file to satitsfy the process runner
     os.makedirs("asset_output", exist_ok=True)
-    with open("./asset_output/catalog.json", "w") as f:
+    with open("./asset_output/catalog.json", "w", encoding="utf-8") as f:
         catalog = get_catalog()
         catalog["data"] = response_geojson
         json.dump(catalog, f)
