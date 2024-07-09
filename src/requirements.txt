@@ -1,2 +1,2 @@
-physrisk-lib==0.31.0
+physrisk-lib==0.37.0
 requests==2.32.2

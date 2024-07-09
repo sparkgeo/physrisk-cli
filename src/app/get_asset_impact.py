@@ -16,6 +16,7 @@ from convert_formats import (
     convert_response_from_physrisk_format,
 )
 from physrisk.container import Container
+from physrisk.requests import Requester
 from physrisk_cli_logger import logger
 
 
@@ -35,13 +36,23 @@ def make_request(params: dict):
         dict: The response from the request, or None if an error occurred.
     """
     logger.info("Making request to get asset impact")
+    requester: Requester = Container.requester()
+    request_id = "get_asset_impact"
     try:
-        requester = Container.requester
-        request_id = "get_asset_impact"
-        params["group_ids"] = ["osc"]
-        logger.debug("Request ID: %s", request_id)
+        data_access = "osc"
+        params["group_ids"] = [data_access]
         logger.debug("Request params: %s", params)
-        return requester().get(request_id=request_id, request_dict=params)
+        resp_data = requester.get(request_id=request_id, request_dict=params)
+        resp_data_json = json.loads(resp_data)
+        if not (
+            resp_data_json.get("items")
+            or resp_data_json.get("models")
+            or resp_data_json.get("asset_impacts")
+            or resp_data_json.get("risk_measures")
+        ):
+            logger.error("No results returned for 'get_asset_impact' request")
+            return None
+        return resp_data
     except Exception:
         logger.exception("Error in making request")
         return None
