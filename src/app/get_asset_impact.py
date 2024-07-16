@@ -91,63 +91,6 @@ def get_catalog() -> dict:
     }
 
 
-def split_into_batches(lst, batch_size):
-    """
-    Splits a list into smaller lists (batches) of a specified size.
-
-    Parameters:
-    - lst (list): The list to be split into batches.
-    - batch_size (int): The size of each batch.
-
-    Yields:
-    - list: A batch of the original list, with length up to `batch_size`.
-    """
-    for i in range(0, len(lst), batch_size):
-        yield lst[i : i + batch_size]
-
-
-def prepare_batches(feature_batches, original_geojson):
-    """
-    This function takes a list of feature batches and the original GeoJSON, and
-    for each batch, it creates a new GeoJSON object that retains the original
-    structure but contains only the features from the current batch.
-
-    Parameters:
-    - batches (list of list): A list of batches, where each batch is a list of
-    GeoJSON features.
-    - original_geojson (dict): The original GeoJSON object.
-
-    Returns:
-    - list of dict: A list of new GeoJSON objects, each containing a batch of features.
-    """
-    batched_geojsons = []
-    for feature_batch in feature_batches:
-        new_geojson = original_geojson.copy()  # Copy the original GeoJSON structure
-        new_geojson["features"] = feature_batch  # Replace features with the batch
-        batched_geojsons.append(new_geojson)
-    return batched_geojsons
-
-
-def batch_up(geojson_request, batch_size):
-    """
-    This function is a high-level utility that combines splitting the GeoJSON features
-    into batches and then preparing new GeoJSON objects for each batch.
-    It is intended to be used when the features of a GeoJSON need to be processed in
-    smaller groups while retaining the original GeoJSON structure.
-
-    Parameters:
-    - geojson_request (dict): The GeoJSON object to be batched.
-    - batch_size (int): The size of each batch.
-
-    Returns:
-    - list of dict: A list of new GeoJSON objects, each containing a batch of features.
-    """
-    logger.info("Batching up the GeoJSON request")
-    batched_features = list(split_into_batches(geojson_request["features"], batch_size))
-    batched_geojsons = prepare_batches(batched_features, geojson_request)
-    return batched_geojsons
-
-
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logger.error("AWS credentials not found")
@@ -157,24 +100,17 @@ if __name__ == "__main__":
     args = parse_arguments()
     request_params = json.loads(args.json_string)
 
-    # Split the request into batches of 80 of features each
-    batches = batch_up(request_params, 80)
-
-    response_geojson = {"type": "FeatureCollection", "features": []}
-    for batch_no, batch in enumerate(batches):
-        logger.info(f"Processing batch {batch_no} of {len(batch['features'])}")
-        request_pr_format = convert_request_to_physrisk_format(batch)
-        response = make_request(request_pr_format)
-        response_json = json.loads(response)
-        updated_geosjon = convert_response_from_physrisk_format(response_json, batch)
-        response_geojson["features"].extend(updated_geosjon["features"])
-        response_geojson["score_based_measure_set_defn"] = updated_geosjon[
-            "score_based_measure_set_defn"
-        ]
+    request_pr_format = convert_request_to_physrisk_format(json_in=request_params)
+    response = make_request(params=request_pr_format)
+    response_json = json.loads(response)
+    updated_geojson = convert_response_from_physrisk_format(
+        json_in=response_json, original_geojson=request_params
+    )
 
     # Make a stac catalog.json file to satitsfy the process runner
     os.makedirs("asset_output", exist_ok=True)
     with open("./asset_output/catalog.json", "w", encoding="utf-8") as f:
         catalog = get_catalog()
-        catalog["data"] = response_geojson
+        catalog["data"] = updated_geojson
+        catalog["original_data"] = response_json
         json.dump(catalog, f)
