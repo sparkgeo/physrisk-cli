@@ -160,11 +160,7 @@ if __name__ == "__main__":
     # Split the request into batches of 80 of features each
     batches = batch_up(request_params, 80)
 
-    response_geojson = {
-        "type": "FeatureCollection",
-        "features": [],
-        "properties": request_params["properties"],
-    }
+    response_geojson = {"type": "FeatureCollection", "features": []}
     for batch_no, batch in enumerate(batches):
         logger.info(f"Processing batch {batch_no} of {len(batch['features'])}")
         request_pr_format = convert_request_to_physrisk_format(batch)
@@ -172,6 +168,9 @@ if __name__ == "__main__":
         response_json = json.loads(response)
         updated_geosjon = convert_response_from_physrisk_format(response_json, batch)
         response_geojson["features"].extend(updated_geosjon["features"])
+        response_geojson["score_based_measure_set_defn"] = updated_geosjon[
+            "score_based_measure_set_defn"
+        ]
 
     # Make a stac catalog.json file to satitsfy the process runner
     os.makedirs("asset_output", exist_ok=True)

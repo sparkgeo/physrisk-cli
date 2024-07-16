@@ -30,11 +30,11 @@ def convert_request_to_physrisk_format(json_in: dict) -> dict:
 
         json_out = {
             "assets": {"items": items},
-            "include_asset_level": json_in["properties"].get("include_asset_level"),
-            "include_calc_details": json_in["properties"].get("include_calc_details"),
-            "include_measures": json_in["properties"].get("include_measures"),
-            "years": json_in["properties"].get("years"),
-            "scenarios": json_in["properties"].get("scenarios"),
+            "include_asset_level": True,
+            "include_calc_details": True,
+            "include_measures": True,
+            "years": [2030, 2040, 2050],
+            "scenarios": ["ssp126", "ssp245", "ssp585"],
         }
 
         return json_out
@@ -44,6 +44,42 @@ def convert_request_to_physrisk_format(json_in: dict) -> dict:
         logger.exception(
             "An error occurred while converting request to PhysRisk format"
         )
+
+
+def replace_values_with_null(obj):
+    """
+    Recursively replaces specific values in a nested
+    structure (dicts and lists) with None. Specifically,
+    replaces -9999 with None, and -1 with None if the key
+    is 'score'.
+
+    Parameters:
+    obj (dict | list): The input nested structure.
+
+    Returns:
+    dict | list: The modified structure with specified
+    values replaced by None.
+    """
+    if isinstance(obj, dict):
+        return {
+            k: (
+                replace_values_with_null(v)
+                if isinstance(v, (dict, list))
+                else (None if (v == -9999 or (k == "score" and v == -1)) else v)
+            )
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, list):
+        return [
+            (
+                replace_values_with_null(item)
+                if isinstance(item, (dict, list))
+                else (None if item == -9999 else item)
+            )
+            for item in obj
+        ]
+    else:
+        return obj
 
 
 def convert_response_from_physrisk_format(
@@ -71,6 +107,9 @@ def convert_response_from_physrisk_format(
     """
     logger.info("Converting response from PhysRisk format")
     try:
+        score_based_measure_set_defn = score_based_measure_set_defn = json_in.get(
+            "risk_measures", {}
+        ).get("score_based_measure_set_defn")
         for asset_no, asset_impact in enumerate(json_in["asset_impacts"]):
             impacts = {}
             measures = {}
@@ -106,6 +145,13 @@ def convert_response_from_physrisk_format(
 
             original_geojson["features"][asset_no]["asset_impacts"] = impacts
             original_geojson["features"][asset_no]["risk_measures"] = measures
+
+            # Change -9999 to null values
+            original_geojson = replace_values_with_null(original_geojson)
+            original_geojson[
+                "score_based_measure_set_defn"
+            ] = score_based_measure_set_defn
+
         return original_geojson
     except KeyError:
         logger.exception("Key error while converting response from PhysRisk format")
