@@ -1,2 +1,3 @@
 physrisk-lib==0.31.0
 requests==2.32.2
+shortuuid
