@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: get-asset-impact-workflow
+    id: get-asset-impact-workflow-textscores
     label: get asset impact
     doc: get asset impact
     requirements:
