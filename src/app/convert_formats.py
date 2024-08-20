@@ -1,4 +1,5 @@
 from physrisk_cli_logger import logger
+from shortuuid import ShortUUID
 
 
 def convert_request_to_physrisk_format(json_in: dict) -> dict:
@@ -82,6 +83,41 @@ def replace_values_with_null(obj):
         return obj
 
 
+def scoreText(score: int) -> str:
+    """
+    Converts a numerical score into a descriptive text string.
+
+    This function takes an integer score and returns a corresponding
+    descriptive text string based on predefined categories.
+    The categories are as follows:
+    - 0: "No data"
+    - 1: "Low"
+    - 2: "Medium"
+    - 3: "High"
+    - 4: "Red flag"
+    Any other score will default to "No data".
+
+    Parameters:
+    - score (int): The numerical score to be converted.
+
+    Returns:
+    - str: The descriptive text corresponding to the given score.
+    """
+    match score:
+        case 0:
+            return "No data"
+        case 1:
+            return "Low"
+        case 2:
+            return "Medium"
+        case 3:
+            return "High"
+        case 4:
+            return "Red flag"
+        case _:
+            return "No data"
+
+
 def convert_response_from_physrisk_format(
     json_in: dict, original_geojson: dict
 ) -> dict:
@@ -118,6 +154,7 @@ def convert_response_from_physrisk_format(
                 measures_key = measure_scores["key"]
                 val = measure_scores["measures_0"][asset_no]
                 scores = measure_scores["scores"][asset_no]
+                scores = scoreText(scores)
                 measures.setdefault(measures_key["hazard_type"], {}).setdefault(
                     measures_key["scenario_id"], {}
                 ).setdefault(measures_key["year"], {"measures": val, "score": scores})
@@ -145,6 +182,9 @@ def convert_response_from_physrisk_format(
 
             original_geojson["features"][asset_no]["asset_impacts"] = impacts
             original_geojson["features"][asset_no]["risk_measures"] = measures
+            original_geojson["features"][asset_no]["properties"][
+                "id"
+            ] = ShortUUID().random(length=8)
 
             # Change -9999 to null values
             # original_geojson = replace_values_with_null(original_geojson)
