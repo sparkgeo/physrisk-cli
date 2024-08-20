@@ -1,4 +1,5 @@
 from physrisk_cli_logger import logger
+from shortuuid import ShortUUID
 
 
 def convert_request_to_physrisk_format(json_in: dict) -> dict:
@@ -145,6 +146,9 @@ def convert_response_from_physrisk_format(
 
             original_geojson["features"][asset_no]["asset_impacts"] = impacts
             original_geojson["features"][asset_no]["risk_measures"] = measures
+            original_geojson["features"][asset_no]["properties"][
+                "id"
+            ] = ShortUUID().random(length=8)
 
             # Change -9999 to null values
             # original_geojson = replace_values_with_null(original_geojson)
