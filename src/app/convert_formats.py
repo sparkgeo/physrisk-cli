@@ -1,3 +1,5 @@
+import re
+
 from physrisk_cli_logger import logger
 from shortuuid import ShortUUID
 
@@ -118,6 +120,44 @@ def scoreText(score: int) -> str:
             return None
 
 
+def convert_scenario_id_string(scenario_id: str) -> str:
+    """
+    Converts a scenario ID string from a compact form to a formatted form.
+
+    If the scenario ID starts with "ssp", it converts it to the form "SSP1-2.6".
+    Otherwise, it returns the scenario ID unchanged.
+
+    Args:
+        scenario_id (str): The scenario ID string to be converted.
+
+    Returns:
+        str: The formatted scenario ID string.
+    """
+    if scenario_id.startswith("ssp"):
+        return f"{(scenario_id[0:3]).upper()}{scenario_id[3]}-{scenario_id[4]}.{scenario_id[5]}"
+    else:
+        return scenario_id
+
+
+def pascal_to_words(pascal_str):
+    """
+    Converts a PascalCase string into a string of words with each word capitalized.
+
+    Args:
+        pascal_str (str): The PascalCase string to be converted.
+
+    Returns:
+        str: A string of words with each word capitalized, separated by spaces.
+
+    Example:
+        >>> pascal_to_words("PascalCaseString")
+        'Pascal Case String'
+    """
+    # Use regex to find word boundaries
+    words = re.findall(r"[A-Z][a-z]*", pascal_str)
+    return " ".join(word.capitalize() for word in words)
+
+
 def convert_response_from_physrisk_format(
     json_in: dict, original_geojson: dict
 ) -> dict:
@@ -152,7 +192,9 @@ def convert_response_from_physrisk_format(
             for impact in asset_impact["impacts"]:
                 key = impact["key"]
                 hazard_type = key["hazard_type"]
+                hazard_type = pascal_to_words(hazard_type)
                 scenario_id = key["scenario_id"]
+                scenario_id = convert_scenario_id_string(scenario_id)
                 year = key["year"]
 
                 if hazard_type not in combined_data:
@@ -194,7 +236,9 @@ def convert_response_from_physrisk_format(
             for measure_scores in json_in["risk_measures"]["measures_for_assets"]:
                 measures_key = measure_scores["key"]
                 hazard_type = measures_key["hazard_type"]
+                hazard_type = pascal_to_words(hazard_type)
                 scenario_id = measures_key["scenario_id"]
+                scenario_id = convert_scenario_id_string(scenario_id)
                 year = measures_key["year"]
                 val = measure_scores["measures_0"][asset_no]
                 if val == -9999:
@@ -229,7 +273,7 @@ def convert_response_from_physrisk_format(
             original_geojson[
                 "score_based_measure_set_defn"
             ] = score_based_measure_set_defn
-            original_geojson["response_version"] = "0.0.4"
+            original_geojson["response_version"] = "0.0.5"
 
         return original_geojson
     except KeyError:
