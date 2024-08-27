@@ -112,5 +112,4 @@ if __name__ == "__main__":
     with open("./asset_output/catalog.json", "w", encoding="utf-8") as f:
         catalog = get_catalog()
         catalog["data"] = updated_geojson
-        catalog["original_data"] = response_json
         json.dump(catalog, f)
