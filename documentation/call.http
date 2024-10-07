@@ -1,0 +1,35 @@
+@scheme = https
+@ades = test.eodatahub.org.uk/ades
+
+@executeStatus = {{executeProcess.response.headers.Location}}
+
+@jobid = {{getExecuteStatus.response.body.jobID}}
+
+@processName = get-asset-impact-workflow-fileupload
+
+
+###
+
+# @name executeProcess
+POST {{scheme}}://{{ades}}/{{username}}/ogc-api/processes/{{processName}}/execution HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+Prefer: respond-async
+
+< realestate_assets_request.json
+
+
+###
+# @name getExecuteStatus
+GET {{executeStatus}} HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+###
+
+# @name getResults
+
+GET https://sparkgeouser.workspaces.test.eodhp.eco-ke-staging.com/files/eodhp-test-workspaces1/processing-results/cat_{{getExecuteStatus.response.body.jobID}}.json
+Authorization: Bearer {{token}}

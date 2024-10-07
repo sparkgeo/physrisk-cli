@@ -1,0 +1,40 @@
+
+@scheme = https
+@ades = test.eodatahub.org.uk/ades
+
+@deployStatus = {{deployProcessJson.response.headers.Location}}
+
+@processName = get-asset-impact-workflow-fileupload
+
+###
+# @name deleteProcess
+DELETE {{scheme}}://{{ades}}/{{username}}/ogc-api/processes/{{processName}} HTTP/1.1
+Authorization: Bearer {{token}}
+
+
+###
+# @name listprocesses
+
+GET {{scheme}}://{{ades}}/{{username}}/ogc-api/processes HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+###
+
+# @name deployProcessJson
+POST {{scheme}}://{{ades}}/{{username}}/ogc-api/processes HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "executionUnit": {
+    "href": "https://raw.githubusercontent.com/sparkgeo/physrisk-cli/refs/heads/368-workflow-scalability---data-input-via-s3/get_asset_impact.cwl",
+    "type": "application/cwl"
+  }
+}
+
+
+
+
