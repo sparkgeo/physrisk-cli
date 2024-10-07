@@ -9,9 +9,9 @@ $graph:
         networkAccess: true
 
     inputs:
-      json_string:
+      json_file:
         type: string
-        doc: the file to transform
+        doc: The geojson file
     outputs:
       - id: asset-result
         type: Directory
@@ -21,7 +21,7 @@ $graph:
       get-impact:
         run: "#get-asset-impact"
         in:
-          json_string: json_string
+          json_file: json_file
         out:
           - asset-result
   - class: CommandLineTool
@@ -33,10 +33,10 @@ $graph:
             dockerPull: public.ecr.aws/z0u8g6n1/eodh:text_score
     baseCommand: get_asset_impact.py
     inputs:
-        json_string:
+        json_file:
             type: string
             inputBinding:
-                prefix: --json_string=
+                prefix: --json_file=
                 separate: false
                 position: 4
     outputs:

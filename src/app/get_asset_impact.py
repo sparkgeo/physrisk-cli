@@ -11,6 +11,7 @@ import json
 import os
 import sys
 
+import requests
 from convert_formats import (
     convert_request_to_physrisk_format,
     convert_response_from_physrisk_format,
@@ -58,7 +59,7 @@ def parse_arguments():
     logger.info("Parsing command-line arguments")
     parser = argparse.ArgumentParser(description="Make a request.")
     # parser.add_argument("--json", type=str, help="JSON string with request parameters")
-    parser.add_argument("--json_string", type=str, help="Geojson of the assets")
+    parser.add_argument("--json_file", type=str, help="Geojson of the assets")
     parser.add_argument(
         "--flat",
         action="store_true",
@@ -98,7 +99,17 @@ if __name__ == "__main__":
 
     # Getting the json string
     args = parse_arguments()
-    request_params = json.loads(args.json_string)
+    if "http" in args.json_file:
+        url = args.json_file
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
+            )
+        request_params = json.loads(response.content)
+    else:
+        with open(args.json_file, "r", encoding="utf-8") as file:
+            request_params = json.load(file)
 
     request_pr_format = convert_request_to_physrisk_format(json_in=request_params)
     response = make_request(params=request_pr_format)
