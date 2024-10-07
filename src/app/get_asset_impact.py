@@ -10,7 +10,9 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 
+import boto3
 import requests
 from convert_formats import (
     convert_request_to_physrisk_format,
@@ -92,6 +94,25 @@ def get_catalog() -> dict:
     }
 
 
+def download_file(s3_link: str, temp_file: str):
+    """
+    Downloads a file from an S3 bucket.
+
+    This function downloads a file from an S3 bucket using the provided link and
+    saves it to the specified location.
+
+    Args:
+    - s3_link (str): The link to the file in the S3 bucket.
+    - temp_file (str): The path to save the downloaded file.
+    """
+
+    s3 = boto3.client("s3")
+    print("Downloading file from S3...")
+    s3_bucket = s3_link.split("/")[2]
+    s3_bucketkey = "/".join(s3_link.split("/")[3:])
+    s3.download_file(s3_bucket, s3_bucketkey, temp_file)
+
+
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logger.error("AWS credentials not found")
@@ -100,6 +121,7 @@ if __name__ == "__main__":
     # Getting the json string
     args = parse_arguments()
     if "http" in args.json_file:
+        logger.info("Getting the content of the input JSON over HTTP")
         url = args.json_file
         response = requests.get(url)
         if response.status_code != 200:
@@ -107,7 +129,15 @@ if __name__ == "__main__":
                 f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
             )
         request_params = json.loads(response.content)
+    elif "s3" in args.json_file:
+        logger.info("Getting the content of the input JSON from S3")
+        # create temp file to store the downloaded file using temp file
+        temp_file = tempfile.NamedTemporaryFile(delete=False).name
+        download_file(args.json_file, temp_file)
+        with open(temp_file, "r", encoding="utf-8") as file:
+            request_params = json
     else:
+        logger.info("Reading the input JSON file")
         with open(args.json_file, "r", encoding="utf-8") as file:
             request_params = json.load(file)
 
