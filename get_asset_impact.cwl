@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: get-asset-impact-workflow-textscores
+    id: get-asset-impact-workflow
     label: get asset impact
     doc: get asset impact
     requirements:
@@ -30,7 +30,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:text_score
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:osc-data
     baseCommand: get_asset_impact.py
     inputs:
         json_string:
