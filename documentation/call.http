@@ -33,3 +33,15 @@ Accept: application/json
 
 GET https://sparkgeouser.workspaces.test.eodhp.eco-ke-staging.com/files/eodhp-test-workspaces1/processing-results/cat_{{getExecuteStatus.response.body.jobID}}.json
 Authorization: Bearer {{token}}
+
+###
+# @name listJobs
+GET {{scheme}}://{{ades}}/{{username}}/ogc-api/jobs HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+# @name listJobsManual
+GET https://test.eodatahub.org.uk/ades/sparkgeouser/ogc-api/jobs/
+Authorization: Bearer {{token}}
+Accept: application/json

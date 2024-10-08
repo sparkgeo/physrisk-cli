@@ -38,3 +38,10 @@ Content-Type: application/json
 
 
 
+###
+# @name processdetails
+
+GET {{scheme}}://{{ades}}/{{username}}/ogc-api/processes/{{processName}} HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+

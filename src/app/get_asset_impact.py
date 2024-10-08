@@ -113,6 +113,78 @@ def download_file(s3_link: str, temp_file: str):
     s3.download_file(s3_bucket, s3_bucketkey, temp_file)
 
 
+def load_json_from_file(file_path):
+    """
+    Loads JSON content from a file and returns it as a dictionary.
+
+    Args:
+        file_path (str): The path to the JSON file.
+
+    Returns:
+        dict: The JSON content as a dictionary.
+
+    Raises:
+        RuntimeError: If the file is empty or contains invalid JSON.
+    """
+    with open(file_path, "r", encoding="utf-8") as file:
+        content = file.read()
+        if not content.strip():
+            raise RuntimeError(f"The JSON file {file_path} is empty.")
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            raise RuntimeError(
+                f"Failed to decode the content of the JSON file {file_path}"
+            )
+
+
+def load_json_from_url(url):
+    """
+    Loads JSON content from a URL and returns it as a dictionary.
+
+    Args:
+        url (str): The URL to the JSON file.
+
+    Returns:
+        dict: The JSON content as a dictionary.
+
+    Raises:
+        RuntimeError: If the request fails or the content is invalid JSON.
+    """
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Request to get the content of the input JSON {url} over HTTP failed: {response.text}"
+        )
+    content = response.content.decode("utf-8")
+    if not content.strip():
+        raise RuntimeError(f"The JSON content from {url} is empty.")
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        raise RuntimeError(
+            f"Failed to decode the content of the input JSON {url} over HTTP"
+        )
+
+
+def load_json_from_s3(s3_path):
+    """
+    Loads JSON content from an S3 path and returns it as a dictionary.
+
+    Args:
+        s3_path (str): The S3 path to the JSON file.
+
+    Returns:
+        dict: The JSON content as a dictionary.
+
+    Raises:
+        RuntimeError: If the file is empty or contains invalid JSON.
+    """
+    temp_file = tempfile.NamedTemporaryFile(delete=False).name
+    download_file(s3_path, temp_file)
+    return load_json_from_file(temp_file)
+
+
 if __name__ == "__main__":
     if not os.getenv("OSC_S3_ACCESS_KEY") or not os.getenv("OSC_S3_SECRET_KEY"):
         logger.error("AWS credentials not found")
@@ -120,30 +192,26 @@ if __name__ == "__main__":
 
     # Getting the json string
     args = parse_arguments()
-    if "http" in args.json_file:
-        logger.info("Getting the content of the input JSON over HTTP")
-        url = args.json_file
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"request to get the content of the input JSON {args.json_file} over HTTP failed : {response.text}"
-            )
-        request_params = json.loads(response.content)
-    elif "s3" in args.json_file:
-        logger.info("Getting the content of the input JSON from S3")
-        # create temp file to store the downloaded file using temp file
-        temp_file = tempfile.NamedTemporaryFile(delete=False).name
-        download_file(args.json_file, temp_file)
-        with open(temp_file, "r", encoding="utf-8") as file:
-            request_params = json
-    else:
-        logger.info("Reading the input JSON file")
-        with open(args.json_file, "r", encoding="utf-8") as file:
-            request_params = json.load(file)
+    try:
+        if "http" in args.json_file:
+            logger.info("Getting the content of the input JSON over HTTP")
+            request_params = load_json_from_url(args.json_file)
+        elif "s3" in args.json_file:
+            logger.info("Getting the content of the input JSON from S3")
+            request_params = load_json_from_s3(args.json_file)
+        else:
+            logger.info("Reading the input JSON file")
+            request_params = load_json_from_file(args.json_file)
+    except RuntimeError as e:
+        logger.error(e)
+        sys.exit(1)
 
     request_pr_format = convert_request_to_physrisk_format(json_in=request_params)
     response = make_request(params=request_pr_format)
-    response_json = json.loads(response)
+    try:
+        response_json = json.loads(response)
+    except json.JSONDecodeError:
+        raise RuntimeError("Failed to decode the response JSON")
     updated_geojson = convert_response_from_physrisk_format(
         json_in=response_json, original_geojson=request_params
     )

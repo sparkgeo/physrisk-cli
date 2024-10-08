@@ -12,6 +12,8 @@ ADD requirements.txt /tmp/requirements.txt
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+RUN pip install boto3
+
 ADD app/* /usr/bin/
 RUN chmod +x /usr/bin/*.py
 
