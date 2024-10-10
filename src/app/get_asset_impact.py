@@ -8,6 +8,7 @@ The module uses the Container from the physrisk package to make the request.
 
 import argparse
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -19,7 +20,9 @@ from convert_formats import (
     convert_response_from_physrisk_format,
 )
 from physrisk.container import Container
-from physrisk_cli_logger import logger
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def make_request(params: dict):
@@ -94,25 +97,6 @@ def get_catalog() -> dict:
     }
 
 
-def download_file(s3_link: str, temp_file: str):
-    """
-    Downloads a file from an S3 bucket.
-
-    This function downloads a file from an S3 bucket using the provided link and
-    saves it to the specified location.
-
-    Args:
-    - s3_link (str): The link to the file in the S3 bucket.
-    - temp_file (str): The path to save the downloaded file.
-    """
-
-    s3 = boto3.client("s3")
-    print("Downloading file from S3...")
-    s3_bucket = s3_link.split("/")[2]
-    s3_bucketkey = "/".join(s3_link.split("/")[3:])
-    s3.download_file(s3_bucket, s3_bucketkey, temp_file)
-
-
 def load_json_from_file(file_path):
     """
     Loads JSON content from a file and returns it as a dictionary.
@@ -132,10 +116,10 @@ def load_json_from_file(file_path):
             raise RuntimeError(f"The JSON file {file_path} is empty.")
         try:
             return json.loads(content)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
             raise RuntimeError(
                 f"Failed to decode the content of the JSON file {file_path}"
-            )
+            ) from exc
 
 
 def load_json_from_url(url):
@@ -151,20 +135,20 @@ def load_json_from_url(url):
     Raises:
         RuntimeError: If the request fails or the content is invalid JSON.
     """
-    response = requests.get(url)
-    if response.status_code != 200:
+    url_response = requests.get(url, timeout=30)
+    if url_response.status_code != 200:
         raise RuntimeError(
-            f"Request to get the content of the input JSON {url} over HTTP failed: {response.text}"
+            f"Request to get the content of the input JSON {url} over HTTP failed: {url_response.text}"
         )
-    content = response.content.decode("utf-8")
+    content = url_response.content.decode("utf-8")
     if not content.strip():
         raise RuntimeError(f"The JSON content from {url} is empty.")
     try:
         return json.loads(content)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         raise RuntimeError(
             f"Failed to decode the content of the input JSON {url} over HTTP"
-        )
+        ) from exc
 
 
 def load_json_from_s3(s3_path):
@@ -181,7 +165,11 @@ def load_json_from_s3(s3_path):
         RuntimeError: If the file is empty or contains invalid JSON.
     """
     temp_file = tempfile.NamedTemporaryFile(delete=False).name
-    download_file(s3_path, temp_file)
+    s3 = boto3.client("s3")
+    print("Downloading file from S3...")
+    s3_bucket = s3_path.split("/")[2]
+    s3_bucketkey = "/".join(s3_path.split("/")[3:])
+    s3.download_file(s3_bucket, s3_bucketkey, temp_file)
     return load_json_from_file(temp_file)
 
 
@@ -210,8 +198,8 @@ if __name__ == "__main__":
     response = make_request(params=request_pr_format)
     try:
         response_json = json.loads(response)
-    except json.JSONDecodeError:
-        raise RuntimeError("Failed to decode the response JSON")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Failed to decode the response JSON") from exc
     updated_geojson = convert_response_from_physrisk_format(
         json_in=response_json, original_geojson=request_params
     )
