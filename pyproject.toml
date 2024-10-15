@@ -1,0 +1,26 @@
+[project]
+name = "Physrisk_CLI"
+version = "0.1.0"
+description = "Running the physrisk as a workflow"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "physrisk-lib==0.31.0",
+    "pre-commit>=4.0.1",
+    "requests==2.32.2",
+    "ruff>=0.6.9",
+    "shortuuid>=1.0.13",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = 80
+
+
+[tool.ruff.lint]
+extend-select=[]
+select = ["D103","E","F", "UP", "B","SIM","I",]
