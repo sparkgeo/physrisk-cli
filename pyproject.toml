@@ -5,6 +5,7 @@ description = "Running the physrisk as a workflow"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "boto3>=1.35.36",
     "physrisk-lib==0.31.0",
     "pre-commit>=4.0.1",
     "requests==2.32.2",

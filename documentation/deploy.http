@@ -4,7 +4,7 @@
 
 @deployStatus = {{deployProcessJson.response.headers.Location}}
 
-@processName = get-asset-impact-workflow-fileupload
+@processName = physrisk
 
 ###
 # @name deleteProcess
@@ -26,14 +26,9 @@ Accept: application/json
 POST {{scheme}}://{{ades}}/{{username}}/ogc-api/processes HTTP/1.1
 Authorization: Bearer {{token}}
 Accept: application/json
-Content-Type: application/json
+Content-Type: application/cwl+yaml
 
-{
-  "executionUnit": {
-    "href": "https://gist.githubusercontent.com/geodowd/1776c94ac067989a1222e457c023abb9/raw/5167571e13c0739739f233e43ccd4e376bfdac3a/get_asset_impact.cwl",
-    "type": "application/cwl"
-  }
-}
+< ../get_asset_impact.cwl
 
 
 

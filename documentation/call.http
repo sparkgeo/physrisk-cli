@@ -5,7 +5,7 @@
 
 @jobid = {{getExecuteStatus.response.body.jobID}}
 
-@processName = get-asset-impact-workflow-fileupload
+@processName = physrisk
 
 
 ###

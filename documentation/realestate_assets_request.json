@@ -1,6 +1,6 @@
 {
     "inputs": {
         "workspace": "sparkgeouser",
-        "json_file": "https://raw.githubusercontent.com/sparkgeo/physrisk-cli/refs/heads/368-workflow-scalability---data-input-via-s3/documentation/realestate_assets.geojson"
+        "json_file": "sparkgeouser/realestate_assets.geojson"
     }
 }

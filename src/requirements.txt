@@ -1,3 +1,4 @@
 physrisk-lib==0.31.0
 requests==2.32.2
-shortuuid
+shortuuid==1.0.13
+boto3==1.35.36

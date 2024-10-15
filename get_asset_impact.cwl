@@ -1,13 +1,12 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: get-asset-impact-workflow-fileupload
+    id: physrisk
     label: get asset impact
     doc: get asset impact
     requirements:
       NetworkAccess:
         networkAccess: true
-
     inputs:
       json_file:
         type: string
@@ -30,7 +29,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:fileupload
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:1
     baseCommand: get_asset_impact.py
     inputs:
         json_file:
