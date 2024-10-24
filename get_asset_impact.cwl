@@ -1,9 +1,12 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: get-asset-impact-workflow
-    label: get asset impact
-    doc: get asset impact
+    id: physrisk-current
+    label: OS Climate Physical Risk
+    doc: >
+      The OS Climate physical risk workflow will undertake a risk analysis on your asset portfolio of the potential impacts of climate change. According to the type of your asset, the workflow will analyse risks from chronic heat, inundation.
+
+      This workflow requires the following columns: ID, latitude, longitude, asset_type, location
     requirements:
       NetworkAccess:
         networkAccess: true

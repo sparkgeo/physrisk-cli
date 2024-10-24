@@ -1,0 +1,42 @@
+
+@scheme = https
+@ades = test.eodatahub.org.uk/ades
+
+@deployStatus = {{deployProcessJson.response.headers.Location}}
+
+@processName = physrisk-current
+
+###
+# @name deleteProcess
+DELETE {{scheme}}://{{ades}}/{{username}}/ogc-api/processes/{{processName}} HTTP/1.1
+Authorization: Bearer {{token}}
+
+
+###
+# @name listprocesses
+
+GET {{scheme}}://{{ades}}/{{username}}/ogc-api/processes HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+###
+
+# @name deployProcessJson
+POST {{scheme}}://{{ades}}/{{username}}/ogc-api/processes HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/cwl+yaml
+
+< ../get_asset_impact.cwl
+
+
+
+
+###
+# @name processdetails
+
+GET {{scheme}}://{{ades}}/{{username}}/ogc-api/processes/{{processName}} HTTP/1.1
+Authorization: Bearer {{token}}
+Accept: application/json
+
