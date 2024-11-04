@@ -1,6 +1,6 @@
 {
-    "inputs": {
-        "workspace": "sparkgeouser",
-        "json_file": "sparkgeouser/realestate_assets.geojson"
-    }
+        "inputs": {
+                "workspace": "sparkgeouser",
+                "json_file": "sparkgeouser/realestate_assets.geojson"
+        }
 }
