@@ -33,7 +33,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:osc-data
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:osc-data-rcr
     baseCommand: get_asset_impact.py
     inputs:
         json_string:
