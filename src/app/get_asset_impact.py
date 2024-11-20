@@ -62,7 +62,7 @@ def parse_arguments():
     """
     logger.info("Parsing command-line arguments")
     parser = argparse.ArgumentParser(description="Make a request.")
-    parser.add_argument("--json_file", type=str, help="Geojson of the assets")
+    parser.add_argument("--assets", type=str, help="Geojson of the assets")
     parser.add_argument(
         "--flat",
         action="store_true",
@@ -182,12 +182,12 @@ if __name__ == "__main__":
     # Getting the json string
     args = parse_arguments()
     try:
-        if "http" in args.json_file:
+        if "http" in args.assets:
             logger.info("Getting the content of the input JSON over HTTP")
-            request_params = load_json_from_url(args.json_file)
+            request_params = load_json_from_url(args.assets)
         else:
             logger.info("Reading the input JSON file from S3")
-            request_params = load_json_from_s3(args.json_file)
+            request_params = load_json_from_s3(args.assets)
     except RuntimeError as e:
         logger.error(e)
         sys.exit(1)

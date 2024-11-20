@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: Workflow
-    id: physrisk-file
+    id: physrisk-filter
     label: OS Climate Physical Risk
     doc: >
       The OS Climate physical risk workflow will undertake a risk analysis on your asset portfolio of the potential impacts of climate change. According to the type of your asset, the workflow will analyse risks from chronic heat, inundation.
@@ -11,7 +11,7 @@ $graph:
       NetworkAccess:
         networkAccess: true
     inputs:
-      json_file:
+      assets:
         type: string
         doc: The geojson file
     outputs:
@@ -23,7 +23,7 @@ $graph:
       get-impact:
         run: "#get-asset-impact"
         in:
-          json_file: json_file
+          assets: assets
         out:
           - asset-result
   - class: CommandLineTool
@@ -32,13 +32,13 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:file01
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:filter01
     baseCommand: get_asset_impact.py
     inputs:
-        json_file:
+        assets:
             type: string
             inputBinding:
-                prefix: --json_file=
+                prefix: --assets=
                 separate: false
                 position: 4
     outputs:

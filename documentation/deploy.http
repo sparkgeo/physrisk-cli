@@ -4,7 +4,7 @@
 
 @deployStatus = {{deployProcessJson.response.headers.Location}}
 
-@processName = physrisk-file
+@processName = physrisk-filter
 
 ###
 # @name deleteProcess
