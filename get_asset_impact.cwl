@@ -32,7 +32,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:filter01
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:filter02
     baseCommand: get_asset_impact.py
     inputs:
         assets:
