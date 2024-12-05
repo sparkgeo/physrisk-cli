@@ -163,10 +163,13 @@ def load_json_from_s3(file_name):
     Raises:
         RuntimeError: If the file is empty or contains invalid JSON.
     """
+
     s3 = boto3.client("s3")
+    base_name = os.path.basename(file_name)
+    user = file_name.split("/")[0]
     bucket_arn = (
         "arn:aws:s3:eu-west-2:312280911266:accesspoint/"
-        "eodhp-test-gstjkhpo-sparkgeouser-s3"
+        f"eodhp-test-gstjkhpo-{user}-s3"
     )
     logger.info(f"Downloading {file_name} from {bucket_arn}...")
     base_name = os.path.basename(file_name)
