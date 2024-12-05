@@ -5,7 +5,7 @@
 
 @jobid = {{getExecuteStatus.response.body.jobID}}
 
-@processName = physrisk-current
+@processName = physrisk-file
 
 
 ###

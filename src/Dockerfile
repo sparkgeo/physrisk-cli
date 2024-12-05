@@ -1,4 +1,4 @@
-FROM python:3.10.0-slim-buster
+FROM python:3.10.0-slim as builder
 LABEL authors="Sparkgeo UK"
 
 RUN apt-get update && apt-get install -y \
@@ -6,14 +6,19 @@ RUN apt-get update && apt-get install -y \
     libproj-dev \
     proj-data \
     proj-bin \
-    python3-scipy
+    python3-scipy \
+    && rm -rf /var/lib/apt/lists/*
 
-ADD requirements.txt /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 ADD app/* /usr/bin/
 RUN chmod +x /usr/bin/*.py
+
+FROM python:3.10.0-slim
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/bin /usr/bin
 
 ARG OSC_S3_BUCKET=osclimatedata
 ARG OSC_S3_HAZARD_PATH=hazard/hazard.zarr

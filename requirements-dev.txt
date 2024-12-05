@@ -1,1 +1,2 @@
+-r src/requirements.txt
 pre-commit

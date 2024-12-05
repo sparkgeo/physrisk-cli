@@ -67,7 +67,7 @@ def replace_values_with_null(obj):
         return {
             k: (
                 replace_values_with_null(v)
-                if isinstance(v, (dict, list))
+                if isinstance(v, (dict | list))
                 else (None if (v == -9999 or (k == "score" and v == -1)) else v)
             )
             for k, v in obj.items()
@@ -76,7 +76,7 @@ def replace_values_with_null(obj):
         return [
             (
                 replace_values_with_null(item)
-                if isinstance(item, (dict, list))
+                if isinstance(item, (dict | list))
                 else (None if item == -9999 else item)
             )
             for item in obj
@@ -134,7 +134,11 @@ def convert_scenario_id_string(scenario_id: str) -> str:
         str: The formatted scenario ID string.
     """
     if scenario_id.startswith("ssp"):
-        return f"{(scenario_id[0:3]).upper()}{scenario_id[3]}-{scenario_id[4]}.{scenario_id[5]}"
+        return (
+            f"{(scenario_id[0:3]).upper()}"
+            f"{scenario_id[3]}-"
+            f"{scenario_id[4]}.{scenario_id[5]}"
+        )
     else:
         return scenario_id
 
@@ -266,13 +270,13 @@ def convert_response_from_physrisk_format(
                 )
 
             original_geojson["features"][asset_no]["asset_impacts"] = combined_data
-            original_geojson["features"][asset_no]["properties"][
-                "id"
-            ] = ShortUUID().random(length=8)
+            original_geojson["features"][asset_no]["properties"]["id"] = (
+                ShortUUID().random(length=8)
+            )
 
-            original_geojson[
-                "score_based_measure_set_defn"
-            ] = score_based_measure_set_defn
+            original_geojson["score_based_measure_set_defn"] = (
+                score_based_measure_set_defn
+            )
             original_geojson["response_version"] = "0.0.5"
 
         return original_geojson
