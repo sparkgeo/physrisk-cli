@@ -31,7 +31,7 @@ Accept: application/json
 
 # @name getResults
 
-GET https://sparkgeouser.workspaces.test.eodhp.eco-ke-staging.com/files/eodhp-test-workspaces1/processing-results/cat_{{getExecuteStatus.response.body.jobID}}.json
+GET https://sparkgeouser.workspaces.test.eodhp.eco-ke-staging.com/files/workspaces-eodhp-test/processing-results/cat_{{getExecuteStatus.response.body.jobID}}.json
 Authorization: Bearer {{token}}
 
 ###
