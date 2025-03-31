@@ -150,6 +150,22 @@ def load_json_from_url(url):
         ) from exc
 
 
+def extract_bucket_and_key_from_s3_url(s3_path):
+    """
+    Extracts the bucket name and key from an S3 URL.
+
+    Args:
+        s3_path (str): The S3 URL in the format 's3://bucket_name/key'.
+
+    Returns:
+        tuple: A tuple containing the bucket name (str) and the key (str).
+    """
+    path_parts = s3_path.replace("s3://", "").split("/")
+    bucket = path_parts.pop(0)
+    key = "/".join(path_parts)
+    return bucket, key
+
+
 def load_json_from_s3(file_name):
     """
     Loads JSON content from an S3 path and returns it as a dictionary.
@@ -163,14 +179,12 @@ def load_json_from_s3(file_name):
     Raises:
         RuntimeError: If the file is empty or contains invalid JSON.
     """
-
     s3 = boto3.client("s3")
-    base_name = os.path.basename(file_name)
-    bucket_arn = "workspaces-eodhp-test"
-    logger.info(f"Downloading {file_name} from {bucket_arn}...")
-    base_name = os.path.basename(file_name)
-    s3.download_file(bucket_arn, file_name, base_name)
-    return load_json_from_file(base_name)
+    bucket_name, key = extract_bucket_and_key_from_s3_url(file_name)
+    logger.info(f"Downloading key: {key} from bucket: {bucket_name}...")
+    local_file = os.path.basename(key)
+    s3.download_file(bucket_name, key, local_file)
+    return load_json_from_file(local_file)
 
 
 if __name__ == "__main__":
@@ -181,12 +195,16 @@ if __name__ == "__main__":
     # Getting the json string
     args = parse_arguments()
     try:
-        if "http" in args.assets:
+        if args.assets.startswith("http://") or args.assets.startswith("https://"):
             logger.info("Getting the content of the input JSON over HTTP")
             request_params = load_json_from_url(args.assets)
+        elif args.assets.startswith("s3://"):
+            logger.info("Getting the content of the input JSON from S3")
+            request_params = load_json_from_s3(args.assets)
         else:
             logger.info("Reading the input JSON file from S3")
-            request_params = load_json_from_s3(args.assets)
+            s3_url = f"s3://workspaces-eodhp-test/{args.assets}"
+            request_params = load_json_from_s3(s3_url)
     except RuntimeError as e:
         logger.error(e)
         sys.exit(1)
