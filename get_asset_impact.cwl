@@ -8,8 +8,14 @@ $graph:
 
       This workflow requires the following columns: ID, latitude, longitude, asset_type, location
     requirements:
+      ResourceRequirement:
+        coresMax: 2
+        ramMax: 4096
       NetworkAccess:
         networkAccess: true
+      EnvVarRequirement:
+        envDef:
+          AWS_DEFAULT_REGION: "eu-west-2"
     inputs:
       assets:
         type: string
@@ -32,7 +38,7 @@ $graph:
         NetworkAccess:
             networkAccess: true
         DockerRequirement:
-            dockerPull: public.ecr.aws/z0u8g6n1/eodh:latest
+            dockerPull: public.ecr.aws/z0u8g6n1/eodh:15
     baseCommand: get_asset_impact.py
     inputs:
         assets:
@@ -45,4 +51,4 @@ $graph:
         asset-result:
             type: Directory
             outputBinding:
-                glob: "./asset_output"
+                glob: .

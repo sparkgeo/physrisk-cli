@@ -85,7 +85,7 @@ def get_catalog() -> dict:
     logger.info("Creating STAC catalog")
     return {
         "stac_version": "1.0.0",
-        "id": "asset-vulnerability-catalog",
+        "id": "",
         "type": "Catalog",
         "description": "OS-C physrisk asset vulnerability catalog",
         "links": [
@@ -220,8 +220,7 @@ if __name__ == "__main__":
     )
 
     # Make a stac catalog.json file to satitsfy the process runner
-    os.makedirs("asset_output", exist_ok=True)
-    with open("./asset_output/catalog.json", "w", encoding="utf-8") as f:
+    with open("./catalog.json", "w", encoding="utf-8") as f:
         catalog = get_catalog()
         catalog["data"] = updated_geojson
         json.dump(catalog, f)
